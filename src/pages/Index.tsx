@@ -4,6 +4,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface User {
   id: number;
@@ -21,6 +39,16 @@ interface Topic {
   views: number;
   lastPost: string;
   category: string;
+  status: 'active' | 'locked' | 'pinned' | 'deleted';
+}
+
+interface ModerationAction {
+  id: number;
+  action: string;
+  moderator: string;
+  target: string;
+  timestamp: string;
+  reason: string;
 }
 
 interface ForumSection {
@@ -56,7 +84,8 @@ const mockTopics: Topic[] = [
     replies: 156,
     views: 2341,
     lastPost: '2024-10-30 14:23',
-    category: 'Главная'
+    category: 'Главная',
+    status: 'pinned'
   },
   {
     id: 2,
@@ -65,7 +94,8 @@ const mockTopics: Topic[] = [
     replies: 87,
     views: 1234,
     lastPost: '2024-10-30 13:45',
-    category: 'FAQ'
+    category: 'FAQ',
+    status: 'active'
   },
   {
     id: 3,
@@ -74,7 +104,35 @@ const mockTopics: Topic[] = [
     replies: 23,
     views: 5678,
     lastPost: '2024-10-29 18:12',
-    category: 'Правила'
+    category: 'Правила',
+    status: 'locked'
+  },
+];
+
+const mockModerationActions: ModerationAction[] = [
+  {
+    id: 1,
+    action: 'Закрыта тема',
+    moderator: 'Admin_2003',
+    target: 'Правила форума',
+    timestamp: '2024-10-29 18:00',
+    reason: 'Нарушение правил п.3'
+  },
+  {
+    id: 2,
+    action: 'Бан пользователя',
+    moderator: 'User_Moderator',
+    target: 'Spammer_123',
+    timestamp: '2024-10-30 10:15',
+    reason: 'Спам'
+  },
+  {
+    id: 3,
+    action: 'Удалено сообщение',
+    moderator: 'Admin_2003',
+    target: 'Тема #234',
+    timestamp: '2024-10-30 12:30',
+    reason: 'Оскорбления'
   },
 ];
 
@@ -87,8 +145,15 @@ const getReputationStars = (reputation: number): string => {
 };
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'home' | 'topics' | 'users'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'topics' | 'users' | 'moderation'>('home');
   const [onlineUsers] = useState(42);
+  const [isModerator] = useState(true);
+  const [showModDialog, setShowModDialog] = useState(false);
+  const [modAction, setModAction] = useState<'lock' | 'pin' | 'delete' | 'ban' | 'warn'>('lock');
+  const [modReason, setModReason] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [topics, setTopics] = useState(mockTopics);
+  const { toast } = useToast();
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,6 +193,16 @@ const Index = () => {
             <Icon name="Users" size={16} className="mr-1" />
             Участники
           </Button>
+          {isModerator && (
+            <Button 
+              variant={currentView === 'moderation' ? 'default' : 'outline'}
+              onClick={() => setCurrentView('moderation')}
+              className="border-2 ml-auto"
+            >
+              <Icon name="Shield" size={16} className="mr-1" />
+              Модерация
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -184,14 +259,35 @@ const Index = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-card">
-                      {mockTopics.map((topic) => (
-                        <tr key={topic.id} className="hover:bg-muted transition-colors cursor-pointer">
+                      {topics.map((topic) => (
+                        <tr key={topic.id} className="hover:bg-muted transition-colors">
                           <td className="border-2 border-border p-3">
-                            <div className="font-bold text-primary text-lg mb-1">{topic.title}</div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                              <Icon name="User" size={14} />
-                              {topic.author.name} {getReputationStars(topic.author.reputation)}
-                              <Badge variant="secondary" className="ml-2">{topic.category}</Badge>
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1">
+                                <div className="font-bold text-primary text-lg mb-1 flex items-center gap-2">
+                                  {topic.status === 'pinned' && <Icon name="Pin" size={16} className="text-accent" />}
+                                  {topic.status === 'locked' && <Icon name="Lock" size={16} className="text-destructive" />}
+                                  {topic.title}
+                                </div>
+                                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                  <Icon name="User" size={14} />
+                                  {topic.author.name} {getReputationStars(topic.author.reputation)}
+                                  <Badge variant="secondary" className="ml-2">{topic.category}</Badge>
+                                </div>
+                              </div>
+                              {isModerator && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-2"
+                                  onClick={() => {
+                                    setSelectedTopic(topic);
+                                    setShowModDialog(true);
+                                  }}
+                                >
+                                  <Icon name="MoreVertical" size={14} />
+                                </Button>
+                              )}
                             </div>
                           </td>
                           <td className="border-2 border-border p-3 text-center font-bold">{topic.replies}</td>
@@ -245,6 +341,90 @@ const Index = () => {
                   </table>
                 </div>
               </Card>
+            )}
+
+            {currentView === 'moderation' && (
+              <div className="space-y-4">
+                <Card className="border-4 border-primary p-0 overflow-hidden">
+                  <div className="bg-primary text-primary-foreground p-3 border-b-4 border-primary">
+                    <h2 className="text-xl font-bold">Панель модерации</h2>
+                  </div>
+                  <div className="p-4 bg-card space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <Card className="border-2 border-border p-4 text-center">
+                        <div className="text-3xl font-bold text-primary">{topics.filter(t => t.status === 'active').length}</div>
+                        <div className="text-sm text-muted-foreground mt-1">Активные темы</div>
+                      </Card>
+                      <Card className="border-2 border-border p-4 text-center">
+                        <div className="text-3xl font-bold text-accent">{topics.filter(t => t.status === 'pinned').length}</div>
+                        <div className="text-sm text-muted-foreground mt-1">Закреплено</div>
+                      </Card>
+                      <Card className="border-2 border-border p-4 text-center">
+                        <div className="text-3xl font-bold text-destructive">{topics.filter(t => t.status === 'locked').length}</div>
+                        <div className="text-sm text-muted-foreground mt-1">Заблокировано</div>
+                      </Card>
+                      <Card className="border-2 border-border p-4 text-center">
+                        <div className="text-3xl font-bold text-muted-foreground">12</div>
+                        <div className="text-sm text-muted-foreground mt-1">Жалобы</div>
+                      </Card>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="border-4 border-primary p-0 overflow-hidden">
+                  <div className="bg-primary text-primary-foreground p-3 border-b-4 border-primary">
+                    <h2 className="text-xl font-bold">История действий</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="border-2 border-border p-3 text-left font-bold">Действие</th>
+                          <th className="border-2 border-border p-3 text-left font-bold">Модератор</th>
+                          <th className="border-2 border-border p-3 text-left font-bold">Цель</th>
+                          <th className="border-2 border-border p-3 text-left font-bold">Причина</th>
+                          <th className="border-2 border-border p-3 text-left font-bold w-40">Время</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-card">
+                        {mockModerationActions.map((action) => (
+                          <tr key={action.id} className="hover:bg-muted transition-colors">
+                            <td className="border-2 border-border p-3">
+                              <Badge variant="outline">{action.action}</Badge>
+                            </td>
+                            <td className="border-2 border-border p-3 font-bold text-primary">{action.moderator}</td>
+                            <td className="border-2 border-border p-3">{action.target}</td>
+                            <td className="border-2 border-border p-3 text-sm text-muted-foreground">{action.reason}</td>
+                            <td className="border-2 border-border p-3 text-sm">{action.timestamp}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+
+                <Card className="border-4 border-primary p-0 overflow-hidden">
+                  <div className="bg-primary text-primary-foreground p-3 border-b-4 border-primary">
+                    <h2 className="text-xl font-bold">Быстрые действия</h2>
+                  </div>
+                  <div className="p-4 bg-card">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <Button variant="outline" className="border-2 h-auto py-4 flex flex-col gap-2">
+                        <Icon name="Ban" size={24} />
+                        <span className="font-bold">Забанить пользователя</span>
+                      </Button>
+                      <Button variant="outline" className="border-2 h-auto py-4 flex flex-col gap-2">
+                        <Icon name="Trash2" size={24} />
+                        <span className="font-bold">Удалить спам</span>
+                      </Button>
+                      <Button variant="outline" className="border-2 h-auto py-4 flex flex-col gap-2">
+                        <Icon name="AlertTriangle" size={24} />
+                        <span className="font-bold">Проверить жалобы</span>
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             )}
           </div>
 
@@ -309,6 +489,72 @@ const Index = () => {
           </p>
         </div>
       </div>
+
+      <Dialog open={showModDialog} onOpenChange={setShowModDialog}>
+        <DialogContent className="border-4 border-primary">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Действия модератора</DialogTitle>
+            <DialogDescription>
+              Тема: {selectedTopic?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold mb-2 block">Действие:</label>
+              <Select value={modAction} onValueChange={(v: any) => setModAction(v)}>
+                <SelectTrigger className="border-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lock">🔒 Закрыть тему</SelectItem>
+                  <SelectItem value="pin">📌 Закрепить тему</SelectItem>
+                  <SelectItem value="delete">🗑️ Удалить тему</SelectItem>
+                  <SelectItem value="ban">⛔ Забанить автора</SelectItem>
+                  <SelectItem value="warn">⚠️ Предупредить автора</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-bold mb-2 block">Причина:</label>
+              <Textarea
+                placeholder="Укажите причину действия..."
+                value={modReason}
+                onChange={(e) => setModReason(e.target.value)}
+                className="border-2 min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowModDialog(false)} className="border-2">
+              Отмена
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedTopic && modReason) {
+                  const updatedTopics = topics.map(t => {
+                    if (t.id === selectedTopic.id) {
+                      if (modAction === 'lock') return { ...t, status: 'locked' as const };
+                      if (modAction === 'pin') return { ...t, status: 'pinned' as const };
+                      if (modAction === 'delete') return { ...t, status: 'deleted' as const };
+                    }
+                    return t;
+                  }).filter(t => t.status !== 'deleted');
+                  setTopics(updatedTopics);
+                  toast({
+                    title: 'Действие выполнено',
+                    description: `${modAction === 'lock' ? 'Тема закрыта' : modAction === 'pin' ? 'Тема закреплена' : 'Тема удалена'}`,
+                  });
+                  setShowModDialog(false);
+                  setModReason('');
+                }
+              }}
+              className="border-2"
+            >
+              Применить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
