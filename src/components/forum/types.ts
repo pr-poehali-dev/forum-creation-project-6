@@ -6,15 +6,36 @@ export interface User {
   joined: string;
 }
 
-export interface Topic {
+export interface Post {
   id: number;
-  title: string;
-  author: User;
+  threadId: number;
+  author: string;
+  timestamp: string;
+  content: string;
+  imageUrl?: string;
+  replies?: number[];
+}
+
+export interface Thread {
+  id: number;
+  boardId: string;
+  subject: string;
+  author: string;
+  timestamp: string;
+  content: string;
+  imageUrl?: string;
   replies: number;
-  views: number;
-  lastPost: string;
-  category: string;
-  status: 'active' | 'locked' | 'pinned' | 'deleted';
+  images: number;
+  isPinned: boolean;
+  isLocked: boolean;
+}
+
+export interface Board {
+  id: string;
+  name: string;
+  description: string;
+  threads: number;
+  isNSFW: boolean;
 }
 
 export interface ModerationAction {
@@ -26,19 +47,13 @@ export interface ModerationAction {
   reason: string;
 }
 
-export interface ForumSection {
-  id: number;
-  name: string;
-  description: string;
-  topics: number;
-  posts: number;
-  icon: string;
-}
-
-export const getReputationStars = (reputation: number): string => {
-  if (reputation >= 5000) return '⭐⭐⭐⭐⭐';
-  if (reputation >= 3000) return '⭐⭐⭐⭐';
-  if (reputation >= 1500) return '⭐⭐⭐';
-  if (reputation >= 500) return '⭐⭐';
-  return '⭐';
+export const formatTime = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(2);
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const second = String(date.getSeconds()).padStart(2, '0');
+  return `${month}/${day}/${year}(${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()]})${hour}:${minute}:${second}`;
 };

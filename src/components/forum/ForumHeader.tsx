@@ -1,14 +1,18 @@
-import Icon from '@/components/ui/icon';
-
 const ForumHeader = () => {
   return (
-    <div className="border-4 border-primary bg-primary text-primary-foreground py-3 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-wider flex items-center gap-2">
-          <Icon name="MessageCircle" size={32} />
-          РЕТРО ФОРУМ
-        </h1>
-        <p className="text-sm mt-1 opacity-90">Добро пожаловать в эпоху ранних форумов!</p>
+    <div className="border-b border-border bg-card py-2 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">
+            <span className="text-accent">4</span>chan
+          </h1>
+          <nav className="flex gap-4 text-sm">
+            <a href="#" className="hover:underline">Home</a>
+            <a href="#" className="hover:underline">News</a>
+            <a href="#" className="hover:underline">FAQ</a>
+            <a href="#" className="hover:underline">Rules</a>
+          </nav>
+        </div>
       </div>
     </div>
   );

@@ -1,77 +1,117 @@
-import { User, Topic, ModerationAction, ForumSection } from './types';
+import { Board, Thread, Post, ModerationAction } from './types';
 
-export const mockUsers: User[] = [
-  { id: 1, name: 'Admin_2003', reputation: 5000, posts: 2341, joined: '2000-01-15' },
-  { id: 2, name: 'WebMaster_99', reputation: 3420, posts: 1567, joined: '1999-03-22' },
-  { id: 3, name: 'User_Moderator', reputation: 2890, posts: 987, joined: '2001-07-11' },
-  { id: 4, name: 'Forum_Veteran', reputation: 1250, posts: 456, joined: '2002-11-03' },
+export const mockBoards: Board[] = [
+  { id: 'b', name: 'Random', description: 'Случайные темы', threads: 8234, isNSFW: false },
+  { id: 'g', name: 'Technology', description: 'Технологии', threads: 4521, isNSFW: false },
+  { id: 'v', name: 'Video Games', description: 'Видеоигры', threads: 9876, isNSFW: false },
+  { id: 'a', name: 'Anime & Manga', description: 'Аниме и манга', threads: 6543, isNSFW: false },
+  { id: 'pol', name: 'Politics', description: 'Политика', threads: 12341, isNSFW: false },
+  { id: 'sci', name: 'Science & Math', description: 'Наука и математика', threads: 2345, isNSFW: false },
 ];
 
-export const forumSections: ForumSection[] = [
-  { id: 1, name: 'Главная', description: 'Общие темы и новости форума', topics: 1234, posts: 12456, icon: 'Home' },
-  { id: 2, name: 'Темы', description: 'Обсуждение интересных тем', topics: 3456, posts: 45678, icon: 'MessageSquare' },
-  { id: 3, name: 'Правила', description: 'Правила форума и FAQ', topics: 12, posts: 89, icon: 'Shield' },
-  { id: 4, name: 'FAQ', description: 'Часто задаваемые вопросы', topics: 45, posts: 234, icon: 'HelpCircle' },
-  { id: 5, name: 'Участники', description: 'Список пользователей форума', topics: 0, posts: 0, icon: 'Users' },
-  { id: 6, name: 'Поиск', description: 'Поиск по форуму', topics: 0, posts: 0, icon: 'Search' },
+export const mockThreads: Thread[] = [
+  {
+    id: 123456789,
+    boardId: 'b',
+    subject: 'Добро пожаловать на борду',
+    author: 'Anonymous',
+    timestamp: '2024-10-30T14:23:00',
+    content: 'Это первый тред на борде /b/\n\n>будь вежлив\n>соблюдай правила\n>не спамь',
+    imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=250&h=250&fit=crop',
+    replies: 156,
+    images: 23,
+    isPinned: true,
+    isLocked: false
+  },
+  {
+    id: 123456790,
+    boardId: 'b',
+    subject: 'Тред про котиков',
+    author: 'Anonymous',
+    timestamp: '2024-10-30T13:45:00',
+    content: 'Постим котиков',
+    imageUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=250&h=250&fit=crop',
+    replies: 87,
+    images: 45,
+    isPinned: false,
+    isLocked: false
+  },
+  {
+    id: 123456791,
+    boardId: 'g',
+    subject: 'Какой дистрибутив Linux лучший?',
+    author: 'Anonymous',
+    timestamp: '2024-10-30T12:30:00',
+    content: '>arch\n>btw',
+    imageUrl: 'https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=250&h=250&fit=crop',
+    replies: 234,
+    images: 12,
+    isPinned: false,
+    isLocked: false
+  },
+  {
+    id: 123456792,
+    boardId: 'v',
+    subject: 'Какая игра года?',
+    author: 'Anonymous',
+    timestamp: '2024-10-30T11:15:00',
+    content: 'Обсуждаем GOTY 2024',
+    imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=250&h=250&fit=crop',
+    replies: 178,
+    images: 34,
+    isPinned: false,
+    isLocked: false
+  },
 ];
 
-export const mockTopics: Topic[] = [
+export const mockPosts: Post[] = [
   {
     id: 1,
-    title: 'Добро пожаловать на форум!',
-    author: mockUsers[0],
-    replies: 156,
-    views: 2341,
-    lastPost: '2024-10-30 14:23',
-    category: 'Главная',
-    status: 'pinned'
+    threadId: 123456789,
+    author: 'Anonymous',
+    timestamp: '2024-10-30T14:25:00',
+    content: '>>123456789\nОтличный тред, спасибо OP',
   },
   {
     id: 2,
-    title: 'Как получить больше репутации?',
-    author: mockUsers[1],
-    replies: 87,
-    views: 1234,
-    lastPost: '2024-10-30 13:45',
-    category: 'FAQ',
-    status: 'active'
+    threadId: 123456789,
+    author: 'Anonymous',
+    timestamp: '2024-10-30T14:27:00',
+    content: '>зеленый текст\n>mfw',
+    imageUrl: 'https://images.unsplash.com/photo-1551847812-c7c0b0b0b3b0?w=250&h=250&fit=crop',
   },
   {
     id: 3,
-    title: 'Правила форума - ОБЯЗАТЕЛЬНО К ПРОЧТЕНИЮ',
-    author: mockUsers[0],
-    replies: 23,
-    views: 5678,
-    lastPost: '2024-10-29 18:12',
-    category: 'Правила',
-    status: 'locked'
+    threadId: 123456789,
+    author: 'Anonymous',
+    timestamp: '2024-10-30T14:30:00',
+    content: '>>2\nkek',
   },
 ];
 
 export const mockModerationActions: ModerationAction[] = [
   {
     id: 1,
-    action: 'Закрыта тема',
-    moderator: 'Admin_2003',
-    target: 'Правила форума',
+    action: 'Удален тред',
+    moderator: 'Janitor',
+    target: 'Thread #12345',
     timestamp: '2024-10-29 18:00',
-    reason: 'Нарушение правил п.3'
-  },
-  {
-    id: 2,
-    action: 'Бан пользователя',
-    moderator: 'User_Moderator',
-    target: 'Spammer_123',
-    timestamp: '2024-10-30 10:15',
     reason: 'Спам'
   },
   {
+    id: 2,
+    action: 'Бан',
+    moderator: 'Moderator',
+    target: '192.168.1.1',
+    timestamp: '2024-10-30 10:15',
+    reason: 'Нарушение правил #3'
+  },
+  {
     id: 3,
-    action: 'Удалено сообщение',
-    moderator: 'Admin_2003',
-    target: 'Тема #234',
+    action: 'Удален пост',
+    moderator: 'Janitor',
+    target: 'Post #67890',
     timestamp: '2024-10-30 12:30',
-    reason: 'Оскорбления'
+    reason: 'Офтоп'
   },
 ];
